@@ -40,8 +40,13 @@ function AppointmentsPage() {
     // Load appointments from localStorage
     const loadAppointments = () => {
       const allBookings = JSON.parse(localStorage.getItem('mindcare_bookings') || '[]');
+      
+      // Filter appointments for current therapist by name matching
       const therapistAppointments = allBookings
-        .filter((booking: any) => booking.therapistId === user?.id)
+        .filter((booking: any) => {
+          // Match by therapist name since therapistId might not be set correctly
+          return booking.therapistName === user?.name || booking.therapistId === user?.id;
+        })
         .map((booking: any) => ({
           id: booking.id,
           patientName: booking.patientName,
@@ -55,9 +60,7 @@ function AppointmentsPage() {
           notes: booking.notes || ''
         }));
       
-      if (therapistAppointments.length > 0) {
-        setAppointments(therapistAppointments);
-      }
+      setAppointments(therapistAppointments);
     };
 
     loadAppointments();
@@ -87,6 +90,18 @@ function AppointmentsPage() {
   };
 
   const handleStatusChange = (appointmentId: string, newStatus: string) => {
+    // Update appointment status in localStorage
+    const allBookings = JSON.parse(localStorage.getItem('mindcare_bookings') || '[]');
+    const updatedBookings = allBookings.map((booking: any) => 
+      booking.id === appointmentId ? { ...booking, status: newStatus } : booking
+    );
+    localStorage.setItem('mindcare_bookings', JSON.stringify(updatedBookings));
+    
+    // Update local state
+    setAppointments(prev => prev.map(apt => 
+      apt.id === appointmentId ? { ...apt, status: newStatus as any } : apt
+    ));
+    
     toast.success(`Appointment ${newStatus}`);
   };
 

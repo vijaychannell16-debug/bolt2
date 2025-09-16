@@ -80,8 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string, role?: string): Promise<boolean> => {
     try {
-      // Simulate API call with predefined users
-      const users = [
+      // Load all registered users from localStorage
+      const registeredUsers = JSON.parse(localStorage.getItem('mindcare_registered_users') || '[]');
+      
+      // Predefined demo users
+      const demoUsers = [
         {
           id: '1',
           email: 'patient@example.com',
@@ -108,8 +111,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           role: 'admin' as const
         }
       ];
+      
+      // Combine demo users with registered users
+      const allUsers = [...demoUsers, ...registeredUsers];
 
-      const foundUser = users.find(u => u.email === email && (!role || u.role === role));
+      const foundUser = allUsers.find(u => u.email === email && (!role || u.role === role));
       
       if (foundUser && password === 'password') {
         setUser(foundUser);
@@ -128,7 +134,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (userData: RegisterData): Promise<boolean> => {
     try {
-      // Simulate registration
+      // Load existing registered users
+      const existingUsers = JSON.parse(localStorage.getItem('mindcare_registered_users') || '[]');
+      
+      // Check if user already exists
+      if (existingUsers.some((u: any) => u.email === userData.email)) {
+        toast.error('User with this email already exists');
+        return false;
+      }
+      
+      // Create new user
       const newUser: User = {
         id: Date.now().toString(),
         email: userData.email,
@@ -144,6 +159,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...(userData.licenseNumber && { licenseNumber: userData.licenseNumber }),
         verified: userData.role === 'patient'
       };
+
+      // Save to registered users list
+      const updatedUsers = [...existingUsers, newUser];
+      localStorage.setItem('mindcare_registered_users', JSON.stringify(updatedUsers));
 
       setUser(newUser);
       localStorage.setItem('mindcare_user', JSON.stringify(newUser));

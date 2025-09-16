@@ -208,7 +208,7 @@ function BookingPage() {
       id: Date.now().toString(),
       patientId: user?.id || '',
       patientName: user?.name || '',
-      therapistId: selectedTherapist.id,
+      therapistId: selectedTherapist.id || selectedTherapist.name, // Use name as fallback
       therapistName: selectedTherapist.name,
       date: selectedDate,
       time: selectedTime,
@@ -238,7 +238,7 @@ function BookingPage() {
     // Update booking status to confirmed after payment
     const existingBookings = JSON.parse(localStorage.getItem('mindcare_bookings') || '[]');
     const updatedBookings = existingBookings.map((booking: Appointment) => {
-      if (booking.therapistId === selectedTherapist.id && 
+      if ((booking.therapistId === selectedTherapist.id || booking.therapistName === selectedTherapist.name) && 
           booking.date === selectedDate && 
           booking.time === selectedTime &&
           booking.patientId === user?.id) {
